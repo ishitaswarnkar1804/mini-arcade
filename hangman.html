@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hangman | Mini Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+<div class="brand">
+<div class="logo">MA</div>
+<div class="title">
+<h1>Mini Arcade</h1>
+<p>Hangman</p>
+</div>
+</div>
+<nav class="nav"><a href="index.html">Home</a></nav>
+</header>
+
+<main class="arena">
+<div class="game-box">
+<h2>Hangman</h2>
+
+<div class="controls">
+<div class="levels">
+<button onclick="setLevel(this,'Easy')" class="active">Easy</button>
+<button onclick="setLevel(this,'Medium')">Medium</button>
+<button onclick="setLevel(this,'Hard')">Hard</button>
+</div>
+
+<div class="scoreboard">
+<p>Level: <span id="level">Easy</span></p>
+<p>Lives: <span id="lives">6</span></p>
+<p>Hints: <span id="hints">3</span></p>
+<button class="reset-btn" onclick="useHint()">Hint</button>
+</div>
+</div>
+
+<canvas id="guy" width="220" height="260"></canvas>
+<div id="word" style="margin:12px 0;font-family:Orbitron;font-size:24px;letter-spacing:6px"></div>
+<div id="keys" class="keys"></div>
+
+<div id="status" style="margin-top:12px;font-family:Orbitron;letter-spacing:2px;color:#ff2fd1"></div>
+<button id="again" class="reset-btn" style="display:none;margin-top:10px" onclick="start()">Play Again</button>
+</div>
+</main>
+
+<style>
+.keys{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:10px}
+.keys button{
+padding:6px;border-radius:8px;background:#0b1024;color:#00fff0;
+border:1px solid rgba(0,255,255,.4);font-family:Orbitron;cursor:pointer
+}
+.keys button.used{opacity:.4;pointer-events:none}
+canvas{margin:0 auto;display:block}
+</style>
+
+<script>
+let level="Easy",word="",mask=[],lives=6
+const banks={
+Easy:["APPLE","HOUSE","PLANT","MUSIC","BREAD","CLOUD","GREEN","RIVER"],
+Medium:["PYTHON","ARCADE","NETWORK","DATABASE","WEBSITE","COMPUTER","HANGMAN"],
+Hard:["ALGORITHM","NEURAL","FRAMEWORK","ENCRYPTION","MICROSERVICE","QUANTUM"]
+}
+
+let hints=parseInt(localStorage.getItem("hangHints")||"3")
+document.getElementById("hints").textContent=hints
+
+function setLevel(btn,l){
+level=l
+document.getElementById("level").textContent=l
+document.querySelectorAll(".levels button").forEach(b=>b.classList.remove("active"))
+btn.classList.add("active")
+start()
+}
+
+function start(){
+word=banks[level][Math.floor(Math.random()*banks[level].length)]
+mask=Array(word.length).fill("_")
+lives=6
+document.getElementById("lives").textContent=lives
+document.getElementById("status").textContent=""
+document.getElementById("again").style.display="none"
+renderWord()
+draw(0)
+buildKeys()
+}
+
+function renderWord(){
+document.getElementById("word").textContent=mask.join(" ")
+}
+
+function buildKeys(){
+const k=document.getElementById("keys")
+k.innerHTML=""
+for(let i=65;i<=90;i++){
+const b=document.createElement("button")
+b.textContent=String.fromCharCode(i)
+b.onclick=()=>guess(b.textContent,b)
+k.appendChild(b)
+}
+}
+
+function guess(c,btn){
+btn.classList.add("used")
+let hit=false
+for(let i=0;i<word.length;i++){
+if(word[i]===c){mask[i]=c;hit=true}
+}
+if(!hit){
+lives--
+document.getElementById("lives").textContent=lives
+draw(6-lives)
+}
+renderWord()
+check()
+}
+
+function useHint(){
+if(hints<=0) return
+let idx=[]
+for(let i=0;i<word.length;i++) if(mask[i]==="_") idx.push(i)
+if(!idx.length) return
+const i=idx[Math.floor(Math.random()*idx.length)]
+mask[i]=word[i]
+hints--
+localStorage.setItem("hangHints",hints)
+document.getElementById("hints").textContent=hints
+renderWord()
+check()
+}
+
+function check(){
+if(mask.join("")===word){
+hints++
+localStorage.setItem("hangHints",hints)
+document.getElementById("hints").textContent=hints
+document.getElementById("status").textContent="YOU WIN! +1 Hint"
+document.getElementById("again").style.display="inline-block"
+}
+if(lives<=0){
+document.getElementById("status").textContent="YOU LOSE! Word was "+word
+document.getElementById("again").style.display="inline-block"
+}
+}
+
+function draw(n){
+const c=document.getElementById("guy")
+const x=c.getContext("2d")
+x.clearRect(0,0,220,260)
+x.strokeStyle="#00fff0";x.lineWidth=3
+x.beginPath()
+x.moveTo(20,240);x.lineTo(200,240)
+x.moveTo(60,240);x.lineTo(60,20);x.lineTo(150,20);x.lineTo(150,50)
+if(n>0)x.arc(150,70,20,0,Math.PI*2)
+if(n>1)x.moveTo(150,90),x.lineTo(150,150)
+if(n>2)x.moveTo(150,110),x.lineTo(120,130)
+if(n>3)x.moveTo(150,110),x.lineTo(180,130)
+if(n>4)x.moveTo(150,150),x.lineTo(130,190)
+if(n>5)x.moveTo(150,150),x.lineTo(170,190)
+x.stroke()
+}
+
+start()
+</script>
+
+</body>
+</html>

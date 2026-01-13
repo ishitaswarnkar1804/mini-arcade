@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whack-A-Mole | Mini Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+<div class="brand">
+<div class="logo">MA</div>
+<div class="title">
+<h1>Mini Arcade</h1>
+<p>Whack-A-Mole</p>
+</div>
+</div>
+<nav class="nav"><a href="index.html">Home</a></nav>
+</header>
+
+<main class="arena">
+<div class="game-box">
+<h2>Whack-A-Mole</h2>
+
+<div class="controls">
+<div class="levels">
+<button onclick="setLevel(this,'Easy')" class="active">Easy</button>
+<button onclick="setLevel(this,'Medium')">Medium</button>
+<button onclick="setLevel(this,'Hard')">Hard</button>
+</div>
+
+<div class="scoreboard">
+<p>Level: <span id="level">Easy</span></p>
+<p>Score: <span id="score">0</span></p>
+<p>Time: <span id="time">30</span>s</p>
+<p>High Score: <span id="high">0</span></p>
+</div>
+</div>
+
+<div id="field" class="field"></div>
+
+<div id="status" style="margin-top:12px;font-family:Orbitron,sans-serif;letter-spacing:2px;font-size:16px;color:#ff2fd1;"></div>
+<button id="startBtn" class="reset-btn" style="margin-top:10px" onclick="startGame()">Start Game</button>
+<button id="playAgain" class="reset-btn" style="display:none;margin-top:10px" onclick="startGame()">Play Again</button>
+</div>
+</main>
+
+<style>
+.field{
+margin-top:20px;
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:22px;
+max-width:420px;
+margin-left:auto;
+margin-right:auto;
+}
+.hole{
+position:relative;
+height:110px;
+border-radius:50%;
+background:radial-gradient(circle at 50% 70%, #000 0%, #000 40%, #02040d 60%);
+box-shadow:0 0 0 1px rgba(0,255,255,.4),0 0 22px rgba(0,255,255,.35);
+overflow:hidden;
+}
+.mole{
+position:absolute;
+bottom:-70px;
+left:50%;
+transform:translateX(-50%) scale(1);
+width:70px;
+height:70px;
+border-radius:50%;
+background:linear-gradient(#7b4a2e,#3a1f12);
+transition:.2s ease;
+box-shadow:0 0 14px rgba(255,200,120,.6);
+}
+.mole::before,.mole::after{
+content:"";
+position:absolute;
+top:22px;
+width:8px;height:8px;
+border-radius:50%;
+background:#000;
+}
+.mole::before{left:18px}
+.mole::after{right:18px}
+.nose{
+position:absolute;
+left:50%;
+top:38px;
+transform:translateX(-50%);
+width:12px;height:8px;
+border-radius:50%;
+background:#ff9aa5;
+}
+.hole.up .mole{bottom:10px}
+.hole.hit .mole{
+transform:translateX(-50%) scale(0.25) rotate(160deg);
+opacity:0;
+background:#ff6b6b;
+box-shadow:0 0 30px rgba(255,80,80,1);
+}
+</style>
+
+<script>
+const game="mole"
+let level="Easy",score=0,time=30,timer,spawn,active=-1,ready=false
+
+async function loadHigh(){
+const r=await fetch(`http://localhost:3000/high-score/${game}/${level}`)
+const d=await r.json()
+document.getElementById("high").textContent=d.high
+}
+loadHigh()
+
+function setLevel(btn,l){
+level=l
+document.getElementById("level").textContent=l
+document.querySelectorAll(".levels button").forEach(b=>b.classList.remove("active"))
+btn.classList.add("active")
+resetBoard()
+loadHigh()
+}
+
+function params(){
+if(level==="Easy") return {speed:1500}
+if(level==="Medium") return {speed:1000}
+return {speed:750}
+}
+
+function resetBoard(){
+clearInterval(timer); clearInterval(spawn)
+score=0; time=30; active=-1; ready=false
+document.getElementById("score").textContent=0
+document.getElementById("time").textContent=time
+document.getElementById("status").textContent="Press START to play"
+document.getElementById("startBtn").style.display="inline-block"
+document.getElementById("playAgain").style.display="none"
+
+const field=document.getElementById("field")
+field.innerHTML=""
+for(let i=0;i<9;i++){
+const h=document.createElement("div")
+h.className="hole"
+
+const m=document.createElement("div")
+m.className="mole"
+m.onmousedown=m.ontouchstart=(e)=>{
+e.preventDefault()
+if(ready) whack(i)
+}
+
+const n=document.createElement("div")
+n.className="nose"
+m.appendChild(n)
+h.appendChild(m)
+field.appendChild(h)
+}
+}
+
+function startGame(){
+if(ready) return
+ready=true
+document.getElementById("status").textContent=""
+document.getElementById("startBtn").style.display="none"
+document.getElementById("playAgain").style.display="none"
+
+spawn=setInterval(pop,params().speed)
+timer=setInterval(()=>{
+time--
+document.getElementById("time").textContent=time
+if(time<=0) end()
+},1000)
+}
+
+function pop(){
+const holes=[...document.querySelectorAll(".hole")]
+holes.forEach(h=>h.classList.remove("up"))
+let i
+do{i=Math.floor(Math.random()*9)}while(i===active)
+active=i
+holes[i].classList.add("up")
+
+setTimeout(()=>{
+holes[i].classList.remove("up")
+},params().speed-200)
+}
+
+function whack(i){
+const holes=[...document.querySelectorAll(".hole")]
+if(i!==active||!holes[i].classList.contains("up")) return
+holes[i].classList.add("hit")
+setTimeout(()=>{
+holes[i].classList.remove("hit")
+holes[i].classList.remove("up")
+},220)
+score+=10
+document.getElementById("score").textContent=score
+active=-1
+}
+
+async function end(){
+clearInterval(timer); clearInterval(spawn)
+ready=false
+document.getElementById("status").textContent="TIME UP!"
+document.getElementById("playAgain").style.display="inline-block"
+await fetch("http://localhost:3000/save-score",{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({game,level,score})
+})
+loadHigh()
+}
+
+resetBoard()
+</script>
+
+</body>
+</html>

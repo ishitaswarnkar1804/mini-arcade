@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Arcade</title>
+
+<link rel="icon" type="image/png" href="images/logo.png">
+<link rel="apple-touch-icon" href="images/logo.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<style>
+@media (max-width: 900px){
+.grid{
+grid-template-columns:repeat(2, 1fr);
+gap:18px;
+padding:0 16px;
+}
+.tile{height:140px}
+}
+
+@media (max-width: 480px){
+.grid{grid-template-columns:1fr}
+.tile{height:150px}
+.topbar{
+flex-direction:column;
+gap:10px;
+text-align:center;
+}
+.nav{
+display:flex;
+gap:12px;
+justify-content:center;
+flex-wrap:wrap;
+}
+}
+</style>
+</head>
+
+<body>
+<header class="topbar">
+<div class="brand">
+<div class="logo">MA</div>
+<div class="title">
+<h1>Mini Arcade</h1>
+<p>Play. Compete. Repeat.</p>
+</div>
+</div>
+<nav class="nav">
+<a href="#">Home</a>
+<a href="#">Games</a>
+<a href="#">Leaderboard</a>
+<a href="#">About</a>
+</nav>
+</header>
+
+<main class="arena">
+<div class="grid">
+<a class="tile" href="snake.html">
+<img src="images/snake.png" alt="Snake Game">
+<div class="overlay">
+<h2>Snake</h2>
+<span>Classic Arcade</span>
+</div>
+</a>
+
+<a class="tile" href="hangman.html">
+<img src="images/hangman.png" alt="Hangman Game">
+<div class="overlay">
+<h2>Hangman</h2>
+<span>Word Puzzle</span>
+</div>
+</a>
+
+<a class="tile" href="flip.html">
+<img src="images/flip.png" alt="Flip Cards Game">
+<div class="overlay">
+<h2>Flip Cards</h2>
+<span>Memory Game</span>
+</div>
+</a>
+
+<a class="tile" href="sudoku.html">
+<img src="images/sudoku.png" alt="Sudoku Game">
+<div class="overlay">
+<h2>Sudoku</h2>
+<span>Brain Teaser</span>
+</div>
+</a>
+
+<a class="tile" href="mole.html">
+<img src="images/mole.png" alt="Whack A Mole Game">
+<div class="overlay">
+<h2>Whack-a-Mole</h2>
+<span>Reflex Challenge</span>
+</div>
+</a>
+
+<a class="tile" href="tictactoe.html">
+<img src="images/tictactoe.png" alt="Tic Tac Toe Game">
+<div class="overlay">
+<h2>Tic Tac Toe</h2>
+<span>Strategy Duel</span>
+</div>
+</a>
+</div>
+</main>
+
+<footer class="footer">
+<p>© 2026 Mini Arcade. All Rights Reserved.</p>
+</footer>
+</body>
+</html>
+

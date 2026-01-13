@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake | Mini Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<style>
+canvas{
+max-width:100%;
+height:auto;
+touch-action:none;
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+<div class="brand">
+<div class="logo">MA</div>
+<div class="title">
+<h1>Mini Arcade</h1>
+<p>Snake</p>
+</div>
+</div>
+<nav class="nav">
+<a href="index.html">Home</a>
+</nav>
+</header>
+
+<main class="arena">
+<div class="game-box">
+<h2>Snake</h2>
+
+<div class="controls">
+<div class="levels">
+<button onclick="setLevel(this,'Easy')" class="active">Easy</button>
+<button onclick="setLevel(this,'Medium')">Medium</button>
+<button onclick="setLevel(this,'Hard')">Hard</button>
+</div>
+
+<div class="scoreboard">
+<p>Level: <span id="level">Easy</span></p>
+<p>Score: <span id="score">0</span></p>
+<p>High Score: <span id="high">0</span></p>
+</div>
+</div>
+
+<canvas id="game" width="420" height="420"></canvas>
+<p style="margin-top:14px;letter-spacing:2px;color:#7ffcff;">Press SPACE to start / restart</p>
+</div>
+</main>
+
+<script>
+window.addEventListener("keydown", e => {
+if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)){
+e.preventDefault()
+}
+})
+
+let sx=0, sy=0
+
+document.addEventListener("touchstart", e=>{
+const t=e.touches[0]
+sx=t.clientX
+sy=t.clientY
+},{passive:false})
+
+document.addEventListener("touchend", e=>{
+const t=e.changedTouches[0]
+const dxs=t.clientX-sx
+const dys=t.clientY-sy
+
+if(!running) start()
+
+if(Math.abs(dxs)>Math.abs(dys)){
+if(dxs>30 && dx===0){dx=box;dy=0}
+if(dxs<-30 && dx===0){dx=-box;dy=0}
+}else{
+if(dys>30 && dy===0){dx=0;dy=box}
+if(dys<-30 && dy===0){dx=0;dy=-box}
+}
+},{passive:false})
+
+let score=0,level="Easy"
+const game="snake"
+const canvas=document.getElementById("game")
+const ctx=canvas.getContext("2d")
+const box=20
+let speed=160
+let loop=null
+let running=false
+
+let snake,food,dx,dy
+
+document.addEventListener("keydown",e=>{
+if(!running && e.code==="Space") start()
+if(!running) return
+if(e.key==="ArrowLeft"&&dx===0){dx=-box;dy=0}
+if(e.key==="ArrowUp"&&dy===0){dx=0;dy=-box}
+if(e.key==="ArrowRight"&&dx===0){dx=box;dy=0}
+if(e.key==="ArrowDown"&&dy===0){dx=0;dy=box}
+})
+
+async function loadHigh(){
+const r=await fetch(`http://localhost:3000/high-score/${game}/${level}`)
+const d=await r.json()
+document.getElementById("high").textContent=d.high
+}
+loadHigh()
+
+function setLevel(btn,l){
+level=l
+score=0
+document.getElementById("level").textContent=l
+document.getElementById("score").textContent=0
+document.querySelectorAll(".levels button").forEach(b=>b.classList.remove("active"))
+btn.classList.add("active")
+speed=l==="Easy"?180:l==="Medium"?120:80
+stop()
+loadHigh()
+drawIdle()
+}
+
+function start(){
+reset()
+running=true
+loop=setInterval(draw,speed)
+}
+
+function stop(){
+running=false
+clearInterval(loop)
+loop=null
+}
+
+function reset(){
+snake=[{x:200,y:200}]
+dx=box;dy=0
+food=spawn()
+score=0
+document.getElementById("score").textContent=0
+}
+
+function spawn(){
+return{
+x:Math.floor(Math.random()*20)*box,
+y:Math.floor(Math.random()*20)*box
+}
+}
+
+async function saveScore(){
+const res = await fetch("http://localhost:3000/save-score",{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({game,level,score})
+})
+await loadHigh()
+}
+
+function drawGrid(){
+ctx.strokeStyle="rgba(0,255,255,.08)"
+for(let i=0;i<=420;i+=20){
+ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,420);ctx.stroke()
+ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(420,i);ctx.stroke()
+}
+}
+
+function roundRect(x,y,w,h,r){
+ctx.beginPath()
+ctx.moveTo(x+r,y)
+ctx.lineTo(x+w-r,y)
+ctx.quadraticCurveTo(x+w,y,x+w,y+r)
+ctx.lineTo(x+w,y+h-r)
+ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h)
+ctx.lineTo(x+r,y+h)
+ctx.quadraticCurveTo(x,y+h,x,y+h-r)
+ctx.lineTo(x,y+r)
+ctx.quadraticCurveTo(x,y,x+r,y)
+ctx.closePath()
+ctx.fill()
+}
+
+function draw(){
+ctx.fillStyle="#02040d"
+ctx.fillRect(0,0,420,420)
+drawGrid()
+
+ctx.shadowColor="#ff2fd1"
+ctx.shadowBlur=15
+ctx.fillStyle="#ff2fd1"
+roundRect(food.x+2,food.y+2,box-4,box-4,6)
+ctx.shadowBlur=0
+
+for(let i=0;i<snake.length;i++){
+let p=snake[i]
+ctx.shadowColor="#00fff0"
+ctx.shadowBlur=i===0?18:8
+ctx.fillStyle=i===0?"#eaffff":"#7ffcff"
+roundRect(p.x+2,p.y+2,box-4,box-4,8)
+ctx.shadowBlur=0
+}
+
+let head={x:snake[0].x+dx,y:snake[0].y+dy}
+
+if(head.x===food.x&&head.y===food.y){
+score+=10
+document.getElementById("score").textContent=score
+food=spawn()
+}else{
+snake.pop()
+}
+
+if(head.x<0||head.y<0||head.x>=420||head.y>=420||snake.some(s=>s.x===head.x&&s.y===head.y)){
+gameOver()
+return
+}
+
+snake.unshift(head)
+}
+
+async function gameOver(){
+stop()
+await saveScore()
+ctx.fillStyle="rgba(0,0,0,.6)"
+ctx.fillRect(0,0,420,420)
+ctx.fillStyle="#00fff0"
+ctx.font="24px Orbitron"
+ctx.textAlign="center"
+ctx.fillText("GAME OVER",210,200)
+ctx.font="14px Orbitron"
+ctx.fillText("Press SPACE to Restart",210,230)
+}
+
+function drawIdle(){
+ctx.fillStyle="#02040d"
+ctx.fillRect(0,0,420,420)
+drawGrid()
+ctx.fillStyle="#00fff0"
+ctx.font="16px Orbitron"
+ctx.textAlign="center"
+ctx.fillText("Press SPACE to Start",210,210)
+}
+
+drawIdle()
+</script>
+</body>
+</html>

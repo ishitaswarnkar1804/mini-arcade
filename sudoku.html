@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sudoku | Mini Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+<div class="brand">
+<div class="logo">MA</div>
+<div class="title">
+<h1>Mini Arcade</h1>
+<p>Sudoku</p>
+</div>
+</div>
+<nav class="nav"><a href="index.html">Home</a></nav>
+</header>
+
+<main class="arena">
+<div class="game-box">
+<h2>Sudoku</h2>
+
+<div class="controls">
+<div class="levels">
+<button onclick="setLevel(this,'Easy')" class="active">Easy</button>
+<button onclick="setLevel(this,'Medium')">Medium</button>
+<button onclick="setLevel(this,'Hard')">Hard</button>
+</div>
+
+<div class="scoreboard">
+<p>Level: <span id="level">Easy</span></p>
+<p>Time: <span id="time">0</span>s</p>
+<p>High Score: <span id="high">0</span></p>
+<p>Hints: <span id="hints">3</span></p>
+<button class="reset-btn" onclick="useHint()">Hint</button>
+</div>
+</div>
+
+<div id="sudoku" class="sudoku"></div>
+
+<div class="pad">
+<button onclick="put(1)">1</button><button onclick="put(2)">2</button><button onclick="put(3)">3</button>
+<button onclick="put(4)">4</button><button onclick="put(5)">5</button><button onclick="put(6)">6</button>
+<button onclick="put(7)">7</button><button onclick="put(8)">8</button><button onclick="put(9)">9</button>
+<button onclick="put(0)">Clear</button>
+</div>
+
+<div id="status" style="margin-top:12px;font-family:Orbitron,sans-serif;letter-spacing:2px;font-size:16px;color:#ff2fd1;"></div>
+<button id="playAgain" class="reset-btn" style="display:none;margin-top:10px" onclick="start()">Play Again</button>
+</div>
+</main>
+
+<style>
+.sudoku{
+margin:20px auto;
+display:grid;
+grid-template-columns:repeat(9,1fr);
+max-width:360px;
+border:2px solid #00fff0;
+box-shadow:0 0 25px rgba(0,255,255,.4);
+}
+.cell{
+aspect-ratio:1;
+display:flex;
+align-items:center;
+justify-content:center;
+font-family:Orbitron, sans-serif;
+font-size:18px;
+border:1px solid rgba(0,255,255,.2);
+cursor:pointer;
+color:#7ffcff;
+}
+.cell.fixed{color:#00fff0}
+.cell.sel{background:rgba(0,255,255,.2)}
+.cell.hl{background:rgba(0,255,255,.12)}
+.cell.bad{background:rgba(255,120,160,.35);color:#ffd6e6}
+.cell.good{background:rgba(120,255,180,.25)}
+.pad{
+margin-top:14px;
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:10px;
+}
+.pad button{
+padding:10px;
+border-radius:10px;
+border:1px solid rgba(0,255,255,.6);
+background:transparent;
+color:#00fff0;
+font-family:Orbitron,sans-serif;
+cursor:pointer;
+}
+.pad button:hover{
+background:#00fff0;
+color:#05070f;
+box-shadow:0 0 16px rgba(0,255,255,.8);
+}
+</style>
+
+<script>
+const game="sudoku"
+let level="Easy",grid=[],solution=[],sel=null,time=0,timer,base=""
+let hints=parseInt(localStorage.getItem("sudokuHints")||"3")
+let hintMode=false
+document.getElementById("hints").textContent=hints
+
+const boards={
+Easy:[
+"530070000600195000098000060800060003400803001700020006060000280000419005000080079",
+"009000000080605020501078030000700400600020005004003000040850706090406010000000900"
+],
+Medium:[
+"000260701680070090190004500820100040004602900050003028009300074040050036703018000",
+"100007090030020008009600500005300900010080002600004000300000010040000007007000300"
+],
+Hard:[
+"000000907000420180000705026100904000050000040000507009920108000034059000507000000",
+"005300000800000020070010500400005300010070006003200080060500009004000030000009700"
+]
+}
+
+async function loadHigh(){
+const r=await fetch(`http://localhost:3000/high-score/${game}/${level}`)
+const d=await r.json()
+document.getElementById("high").textContent=d.high
+}
+loadHigh()
+
+function setLevel(btn,l){
+level=l
+document.getElementById("level").textContent=l
+document.querySelectorAll(".levels button").forEach(b=>b.classList.remove("active"))
+btn.classList.add("active")
+start()
+loadHigh()
+}
+
+function start(){
+clearInterval(timer)
+time=0
+document.getElementById("time").textContent=0
+document.getElementById("status").textContent=""
+document.getElementById("playAgain").style.display="none"
+sel=null
+hintMode=false
+
+base=boards[level][Math.floor(Math.random()*boards[level].length)]
+grid=base.split("").map(n=>+n)
+solution=solve([...grid])
+
+render()
+timer=setInterval(()=>{
+time++
+document.getElementById("time").textContent=time
+},1000)
+}
+
+function render(){
+const box=document.getElementById("sudoku")
+box.innerHTML=""
+grid.forEach((v,i)=>{
+const d=document.createElement("div")
+d.className="cell"
+if(v) d.textContent=v
+if(base[i]!=="0") d.classList.add("fixed")
+
+if(sel!==null){
+let r=Math.floor(sel/9), c=sel%9
+let rr=Math.floor(i/9), cc=i%9
+let br=Math.floor(r/3), bc=Math.floor(c/3)
+if(rr===r||cc===c||(Math.floor(rr/3)===br&&Math.floor(cc/3)===bc)) d.classList.add("hl")
+}
+
+if(i===sel) d.classList.add("sel")
+
+d.onclick=()=>{
+if(base[i]!=="0") return
+if(hintMode){
+grid[i]=solution[i]
+hints--
+localStorage.setItem("sudokuHints",hints)
+document.getElementById("hints").textContent=hints
+hintMode=false
+render()
+check()
+return
+}
+sel=i
+render()
+}
+box.appendChild(d)
+})
+}
+
+function isValid(pos,n){
+let r=Math.floor(pos/9),c=pos%9
+for(let i=0;i<9;i++){
+if(grid[r*9+i]===n) return false
+if(grid[i*9+c]===n) return false
+let br=Math.floor(r/3)*27+Math.floor(c/3)*3+(i%3)+Math.floor(i/3)*9
+if(grid[br]===n) return false
+}
+return true
+}
+
+function put(n){
+if(sel==null) return
+if(base[sel]!=="0") return
+if(n!==0&&!isValid(sel,n)){
+mark("bad")
+return
+}
+grid[sel]=n
+render()
+if(n!==0) mark("good")
+check()
+}
+
+function mark(type){
+const cells=[...document.querySelectorAll(".cell")]
+cells[sel].classList.remove("bad","good")
+cells[sel].classList.add(type)
+setTimeout(()=>cells[sel].classList.remove(type),300)
+}
+
+function useHint(){
+if(hints<=0){
+document.getElementById("status").textContent="No hints left!"
+return
+}
+hintMode=true
+document.getElementById("status").textContent="Select a box for hint"
+}
+
+function check(){
+if(grid.every((v,i)=>v===solution[i])){
+clearInterval(timer)
+hints++
+localStorage.setItem("sudokuHints",hints)
+document.getElementById("hints").textContent=hints
+document.getElementById("status").textContent="YOU WIN! +1 Hint Earned."
+document.getElementById("playAgain").style.display="inline-block"
+fetch("http://localhost:3000/save-score",{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({game,level,score:Math.max(1,1000-time)})
+})
+loadHigh()
+}
+}
+
+function solve(b){
+function ok(i,n){
+let r=Math.floor(i/9)*9,c=i%9
+for(let k=0;k<9;k++){
+if(b[r+k]===n||b[c+9*k]===n) return false
+let br=Math.floor(r/27)*27+Math.floor(c/3)*3+k%3+Math.floor(k/3)*9
+if(b[br]===n) return false
+}
+return true
+}
+function dfs(i){
+if(i===81) return true
+if(b[i]) return dfs(i+1)
+for(let n=1;n<=9;n++){
+if(ok(i,n)){b[i]=n;if(dfs(i+1)) return true;b[i]=0}
+}
+return false
+}
+dfs(0)
+return b
+}
+
+start()
+</script>
+
+</body>
+</html>

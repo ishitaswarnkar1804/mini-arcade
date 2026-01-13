@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flip Cards | Mini Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+<div class="brand">
+<div class="logo">MA</div>
+<div class="title">
+<h1>Mini Arcade</h1>
+<p>Flip Cards</p>
+</div>
+</div>
+<nav class="nav"><a href="index.html">Home</a></nav>
+</header>
+
+<main class="arena">
+<div class="game-box">
+<h2>Flip Cards</h2>
+
+<div class="controls">
+<div class="levels">
+<button onclick="setLevel(this,'Easy')" class="active">Easy</button>
+<button onclick="setLevel(this,'Medium')">Medium</button>
+<button onclick="setLevel(this,'Hard')">Hard</button>
+</div>
+
+<div class="scoreboard">
+<p>Level: <span id="level">Easy</span></p>
+<p>Moves: <span id="moves">0</span></p>
+<p>Score: <span id="score">0</span></p>
+<p>High Score: <span id="high">0</span></p>
+</div>
+</div>
+
+<div id="board" class="board"></div>
+<div id="status" style="margin-top:12px;font-family:Orbitron,sans-serif;letter-spacing:2px;font-size:16px;color:#ff2fd1;"></div>
+<button id="playAgain" class="reset-btn" style="display:none;margin-top:10px" onclick="start()">Play Again</button>
+</div>
+</main>
+
+<style>
+.board{
+margin-top:20px;
+display:grid;
+gap:14px;
+justify-content:center;
+--card:90px;
+}
+
+.card{
+width:var(--card);
+height:calc(var(--card) * 1.25);
+border-radius:16px;
+background:#0b1024;
+box-shadow:
+0 0 0 1px rgba(0,255,255,.3),
+0 0 20px rgba(0,255,255,.25);
+display:flex;
+align-items:center;
+justify-content:center;
+font-family:Orbitron, sans-serif;
+font-size:calc(var(--card) * 0.55);
+color:#00fff0;
+cursor:pointer;
+transition:transform .4s, box-shadow .4s, background .4s;
+}
+
+.card.flipped{
+background:#00fff0;
+color:#05070f;
+box-shadow:0 0 30px rgba(0,255,255,1);
+text-shadow:0 0 12px rgba(0,0,0,.6);
+transform:scale(1.05);
+}
+
+.card.matched{
+background:#1aff8c;
+color:#05070f;
+box-shadow:0 0 28px rgba(26,255,140,1);
+pointer-events:none;
+}
+</style>
+
+<script>
+let level="Easy",moves=0,score=0,lock=false
+let first=null,second=null,matched=0
+let totalPairs=0
+const game="flip"
+const icons=[
+"★","✿","◆","●","▲","■","♥","♠","☀","☾","☁","♫","⚡","✈","⌛","☕",
+"☘","☯","✦","✪","✧","✺","❖","✵","✸","✹","✼","✽","✶","✷","✱","✴"
+]
+
+async function loadHigh(){
+const r=await fetch(`http://localhost:3000/high-score/${game}/${level}`)
+const d=await r.json()
+document.getElementById("high").textContent=d.high
+}
+loadHigh()
+
+function setLevel(btn,l){
+level=l
+moves=0;score=0
+document.getElementById("level").textContent=l
+document.getElementById("moves").textContent=0
+document.getElementById("score").textContent=0
+document.querySelectorAll(".levels button").forEach(b=>b.classList.remove("active"))
+btn.classList.add("active")
+start()
+loadHigh()
+}
+
+function gridSize(){
+return level==="Easy"?4:level==="Medium"?6:8
+}
+
+function start(){
+document.getElementById("status").textContent=""
+document.getElementById("playAgain").style.display="none"
+moves=0;score=0;matched=0
+first=null;second=null;lock=false
+document.getElementById("moves").textContent=0
+document.getElementById("score").textContent=0
+
+const size=gridSize()
+const card = level==="Easy" ? 100 : level==="Medium" ? 80 : 60
+const pairs=(size*size)/2
+totalPairs = pairs
+
+let set=icons.slice(0,pairs)
+let cards=[...set,...set].sort(()=>Math.random()-0.5)
+
+const board=document.getElementById("board")
+board.style.setProperty("--card", card+"px")
+board.style.gridTemplateColumns=`repeat(${size}, ${card}px)`
+board.innerHTML=""
+
+cards.forEach(v=>{
+const c=document.createElement("div")
+c.className="card"
+c.dataset.val=v
+
+c.onclick=()=>{
+if(lock || c.classList.contains("flipped") || c.classList.contains("matched")) return
+
+c.classList.add("flipped")
+c.textContent=v
+
+if(!first){
+first=c
+}else{
+second=c
+lock=true
+moves++
+document.getElementById("moves").textContent=moves
+
+if(first.dataset.val===second.dataset.val){
+first.classList.add("matched")
+second.classList.add("matched")
+matched+=2
+resetPick()
+if(matched===cards.length) finish()
+}else{
+setTimeout(()=>{
+first.classList.remove("flipped")
+second.classList.remove("flipped")
+first.textContent=""
+second.textContent=""
+resetPick()
+},700)
+}
+}
+}
+
+board.appendChild(c)
+})
+}
+
+function resetPick(){
+first=null
+second=null
+lock=false
+}
+
+async function finish(){
+score = Math.max(1, (totalPairs * 100) - (moves * 5))
+document.getElementById("score").textContent = score
+document.getElementById("status").textContent="YOU WIN! Precision Memory."
+document.getElementById("playAgain").style.display="inline-block"
+
+await fetch("http://localhost:3000/save-score",{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({game,level,score})
+})
+loadHigh()
+}
+
+start()
+</script>
+
+</body>
+</html>
