@@ -11,11 +11,11 @@
 
 <style>
 .board{
-margin-top:12px;
+margin-top:10px;
 display:grid;
 gap:8px;
 justify-content:center;
---card:64px;
+--card:60px;
 }
 
 .card{
@@ -84,8 +84,8 @@ pointer-events:none;
 </div>
 
 <div id="board" class="board"></div>
-<div id="status" style="margin-top:10px;font-family:Orbitron,sans-serif;letter-spacing:2px;font-size:14px;color:#ff2fd1;"></div>
-<button id="playAgain" class="reset-btn" style="display:none;margin-top:8px" onclick="start()">Play Again</button>
+<div id="status" style="margin-top:8px;font-family:Orbitron,sans-serif;letter-spacing:2px;font-size:14px;color:#ff2fd1;"></div>
+<button id="playAgain" class="reset-btn" style="display:none;margin-top:6px" onclick="start()">Play Again</button>
 </div>
 </main>
 
@@ -140,8 +140,12 @@ let cards=[...set,...set].sort(()=>Math.random()-0.5)
 const board = document.getElementById("board")
 const box = document.querySelector(".game-box")
 
-const available = box.clientWidth - 16
-const card = Math.max(32, Math.floor(available / size) - 6)
+const rect = box.getBoundingClientRect()
+const freeHeight = window.innerHeight - rect.top - 140
+const freeWidth = box.clientWidth - 16
+
+const usable = Math.min(freeWidth, freeHeight)
+const card = Math.max(32, Math.floor(usable / size) - 6)
 
 board.style.setProperty("--card", card + "px")
 board.style.gridTemplateColumns = `repeat(${size}, ${card}px)`
@@ -213,5 +217,3 @@ start()
 
 </body>
 </html>
-
-
