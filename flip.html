@@ -123,16 +123,12 @@ return level==="Easy"?4:level==="Medium"?6:8
 }
 
 function start(){
-const board = document.getElementById("board")
-const box = document.querySelector(".game-box")
-
-const available = box.clientWidth - 16
-const card = Math.floor(available / size) - 6
-
-board.style.setProperty("--card", card + "px")
-board.style.gridTemplateColumns = `repeat(${size}, ${card}px)`
-board.innerHTML = ""
-
+document.getElementById("status").textContent=""
+document.getElementById("playAgain").style.display="none"
+moves=0;score=0;matched=0
+first=null;second=null;lock=false
+document.getElementById("moves").textContent=0
+document.getElementById("score").textContent=0
 
 const size=gridSize()
 const pairs=(size*size)/2
@@ -142,10 +138,10 @@ let set=icons.slice(0,pairs)
 let cards=[...set,...set].sort(()=>Math.random()-0.5)
 
 const board = document.getElementById("board")
+const box = document.querySelector(".game-box")
 
-const topUI = 260
-const usable = Math.min(window.innerWidth, window.innerHeight - topUI)
-const card = Math.max(32, Math.floor(usable / size) - 6)
+const available = box.clientWidth - 16
+const card = Math.max(32, Math.floor(available / size) - 6)
 
 board.style.setProperty("--card", card + "px")
 board.style.gridTemplateColumns = `repeat(${size}, ${card}px)`
@@ -217,4 +213,5 @@ start()
 
 </body>
 </html>
+
 
