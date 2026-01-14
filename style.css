@@ -604,4 +604,18 @@ flex-wrap:wrap;
     margin-top: 8px;
   }
 }
+@media (max-width: 480px){
+  .board{
+    gap: 8px;
+  }
+
+  .board{
+    --card: 64px;
+  }
+
+  .card{
+    border-radius: 12px;
+    font-size: calc(var(--card) * 0.45);
+  }
+}
 
