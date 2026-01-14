@@ -45,7 +45,7 @@
 
 <div id="status" style="margin-top:12px;font-family:Orbitron,sans-serif;letter-spacing:2px;font-size:16px;color:#ff2fd1;"></div>
 <button id="startBtn" class="reset-btn" style="margin-top:10px" onclick="startGame()">Start Game</button>
-<button id="playAgain" class="reset-btn" style="display:none;margin-top:10px" onclick="startGame()">Play Again</button>
+<button id="playAgain" class="reset-btn" style="display:none;margin-top:10px" onclick="restart()">Play Again</button>
 </div>
 </main>
 
@@ -178,6 +178,11 @@ if(time<=0) end()
 },1000)
 }
 
+function restart(){
+resetBoard()
+startGame()
+}
+
 function pop(){
 const holes=[...document.querySelectorAll(".hole")]
 holes.forEach(h=>h.classList.remove("up"))
@@ -209,11 +214,13 @@ clearInterval(timer); clearInterval(spawn)
 ready=false
 document.getElementById("status").textContent="TIME UP!"
 document.getElementById("playAgain").style.display="inline-block"
+
 await fetch("http://localhost:3000/save-score",{
 method:"POST",
 headers:{ "Content-Type":"application/json" },
 body:JSON.stringify({game,level,score})
 })
+
 loadHigh()
 }
 
