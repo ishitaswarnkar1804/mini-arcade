@@ -63,11 +63,27 @@ font-family:Orbitron,sans-serif;font-size:22px;cursor:pointer
 }
 .choice button:hover{background:#00fff0;color:#05070f;box-shadow:0 0 18px rgba(0,255,255,.8)}
 
-.board{margin:20px auto;display:grid;grid-template-columns:repeat(3,110px);gap:16px;justify-content:center}
+.board{
+margin:16px auto;
+display:grid;
+gap:14px;
+justify-content:center;
+--cell:90px;
+grid-template-columns:repeat(3,var(--cell));
+}
+
 .cell{
-width:110px;height:110px;border-radius:16px;background:#0b1024;
-display:flex;align-items:center;justify-content:center;font-size:48px;
-font-family:Orbitron,sans-serif;color:#00fff0;cursor:pointer;
+width:var(--cell);
+height:var(--cell);
+border-radius:16px;
+background:#0b1024;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:calc(var(--cell) * 0.45);
+font-family:Orbitron,sans-serif;
+color:#00fff0;
+cursor:pointer;
 box-shadow:0 0 0 1px rgba(0,255,255,.4),0 0 22px rgba(0,255,255,.3);
 transition:.2s
 }
@@ -140,6 +156,7 @@ document.getElementById("cpu").textContent=cpu==="X"?"❌":"⭕"
 document.getElementById("choice").style.display="none"
 document.getElementById("board").style.display="grid"
 start()
+resizeBoard()
 if(cpu==="X") cpuTurn()
 }
 
@@ -158,7 +175,19 @@ thinking=false
 document.getElementById("status").textContent=""
 document.getElementById("playAgain").style.display="none"
 render()
+resizeBoard()
 }
+
+function resizeBoard(){
+const box=document.querySelector(".game-box")
+const boardEl=document.getElementById("board")
+const rect=box.getBoundingClientRect()
+const free=Math.min(box.clientWidth, window.innerHeight-rect.top-160)
+const cell=Math.max(60, Math.floor(free/3)-12)
+boardEl.style.setProperty("--cell",cell+"px")
+}
+
+window.addEventListener("resize",resizeBoard)
 
 function render(){
 const b=document.getElementById("board")
@@ -184,7 +213,7 @@ cpuTurn()
 function cpuTurn(){
 thinking=true
 document.getElementById("status").textContent=taunts[Math.floor(Math.random()*taunts.length)]
-const delay=1000+Math.random()*600
+const delay=900+Math.random()*500
 setTimeout(()=>{
 aiMove()
 thinking=false
@@ -266,3 +295,4 @@ resetAll()
 
 </body>
 </html>
+
