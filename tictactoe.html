@@ -226,9 +226,9 @@ let i
 if(level==="Easy"){
 i=randomMove()
 }else if(level==="Medium"){
-i=Math.random()<0.6?smart(cpu)||randomMove():randomMove()
+i=Math.random()<0.6 ? (smart(cpu)||smart(you)||randomMove()) : randomMove()
 }else{
-i=Math.random()<0.85?(smart(cpu)||smart(you)||randomMove()):randomMove()
+i = Math.random() < 0.9 ? bestMove() : randomMove()
 }
 board[i]=cpu
 render()
@@ -248,6 +248,51 @@ const vals=w.map(i=>board[i])
 if(vals.filter(v=>v===p).length===2 && vals.includes("")) return w[vals.indexOf("")]
 }
 return null
+}
+
+function bestMove(){
+let bestScore=-Infinity, move=null
+for(let i=0;i<9;i++){
+if(board[i]===""){
+board[i]=cpu
+let score=minimax(board,0,false)
+board[i]=""
+if(score>bestScore){bestScore=score;move=i}
+}
+}
+return move
+}
+
+function minimax(b,depth,isMax){
+if(checkSim(cpu,b)) return 10-depth
+if(checkSim(you,b)) return depth-10
+if(b.every(v=>v)) return 0
+
+if(isMax){
+let best=-Infinity
+for(let i=0;i<9;i++){
+if(b[i]===""){
+b[i]=cpu
+best=Math.max(best,minimax(b,depth+1,false))
+b[i]=""
+}
+}
+return best
+}else{
+let best=Infinity
+for(let i=0;i<9;i++){
+if(b[i]===""){
+b[i]=you
+best=Math.min(best,minimax(b,depth+1,true))
+b[i]=""
+}
+}
+return best
+}
+}
+
+function checkSim(p,b){
+return wins.some(w=>w.every(i=>b[i]===p))
 }
 
 function check(p){
@@ -295,4 +340,5 @@ resetAll()
 
 </body>
 </html>
+
 
