@@ -88,6 +88,21 @@ color:#05070f;
 box-shadow:0 0 28px rgba(26,255,140,1);
 pointer-events:none;
 }
+@media (max-width: 480px){
+  .board{
+    gap: 8px;
+  }
+
+  .board{
+    --card: 64px;
+  }
+
+  .card{
+    border-radius: 12px;
+    font-size: calc(var(--card) * 0.45);
+  }
+}
+
 </style>
 
 <script>
