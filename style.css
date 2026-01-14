@@ -549,3 +549,59 @@ justify-content:center;
 flex-wrap:wrap;
 }
 }
+@media (max-width: 480px){
+  .topbar{
+    padding: 10px 14px;
+  }
+
+  .title h1{
+    font-size: 22px;
+  }
+
+  .title p{
+    font-size: 12px;
+  }
+
+  .game-box{
+    max-width: 100%;
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .game-box h2{
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+
+  .controls{
+    margin-bottom: 10px;
+  }
+
+  .levels button{
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  .scoreboard p{
+    font-size: 12px;
+    margin: 2px 0;
+  }
+
+  .canvas-wrap{
+    max-width: 100%;
+  }
+
+  .canvas-wrap canvas{
+    width: 100%;
+  }
+
+  .arena{
+    padding: 8px;
+  }
+
+  .game-box p{
+    font-size: 12px;
+    margin-top: 8px;
+  }
+}
+
