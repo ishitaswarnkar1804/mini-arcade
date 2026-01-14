@@ -11,49 +11,43 @@
 
 <style>
 .board{
-margin-top:20px;
+margin-top:12px;
 display:grid;
-gap:14px;
+gap:8px;
 justify-content:center;
---card:90px;
+--card:64px;
 }
 
 .card{
 width:var(--card);
 height:calc(var(--card) * 1.25);
-border-radius:16px;
+border-radius:14px;
 background:#0b1024;
 box-shadow:
 0 0 0 1px rgba(0,255,255,.3),
-0 0 20px rgba(0,255,255,.25);
+0 0 18px rgba(0,255,255,.25);
 display:flex;
 align-items:center;
 justify-content:center;
 font-family:Orbitron, sans-serif;
-font-size:calc(var(--card) * 0.55);
+font-size:calc(var(--card) * 0.5);
 color:#00fff0;
 cursor:pointer;
-transition:transform .4s, box-shadow .4s, background .4s;
+transition:transform .3s, box-shadow .3s, background .3s;
 }
 
 .card.flipped{
 background:#00fff0;
 color:#05070f;
-box-shadow:0 0 30px rgba(0,255,255,1);
-text-shadow:0 0 12px rgba(0,0,0,.6);
+box-shadow:0 0 28px rgba(0,255,255,1);
 transform:scale(1.05);
 }
 
 .card.matched{
 background:#1aff8c;
 color:#05070f;
-box-shadow:0 0 28px rgba(26,255,140,1);
+box-shadow:0 0 26px rgba(26,255,140,1);
 pointer-events:none;
-}
-
-@media (max-width:480px){
-  .board{ gap:8px; }
-  .card{ border-radius:12px; }
 }
 </style>
 </head>
@@ -90,8 +84,8 @@ pointer-events:none;
 </div>
 
 <div id="board" class="board"></div>
-<div id="status" style="margin-top:12px;font-family:Orbitron,sans-serif;letter-spacing:2px;font-size:16px;color:#ff2fd1;"></div>
-<button id="playAgain" class="reset-btn" style="display:none;margin-top:10px" onclick="start()">Play Again</button>
+<div id="status" style="margin-top:10px;font-family:Orbitron,sans-serif;letter-spacing:2px;font-size:14px;color:#ff2fd1;"></div>
+<button id="playAgain" class="reset-btn" style="display:none;margin-top:8px" onclick="start()">Play Again</button>
 </div>
 </main>
 
@@ -143,18 +137,15 @@ totalPairs = pairs
 let set=icons.slice(0,pairs)
 let cards=[...set,...set].sort(()=>Math.random()-0.5)
 
-const board=document.getElementById("board")
-board.style.gridTemplateColumns=`repeat(${size}, var(--card))`
+const board = document.getElementById("board")
 
-if(window.innerWidth <= 480){
-  if(size === 4) board.style.setProperty("--card","64px")
-  if(size === 6) board.style.setProperty("--card","52px")
-  if(size === 8) board.style.setProperty("--card","44px")
-}else{
-  board.style.setProperty("--card","90px")
-}
+const topUI = 260
+const usable = Math.min(window.innerWidth, window.innerHeight - topUI)
+const card = Math.max(32, Math.floor(usable / size) - 6)
 
-board.innerHTML=""
+board.style.setProperty("--card", card + "px")
+board.style.gridTemplateColumns = `repeat(${size}, ${card}px)`
+board.innerHTML = ""
 
 cards.forEach(v=>{
 const c=document.createElement("div")
@@ -188,7 +179,7 @@ second.classList.remove("flipped")
 first.textContent=""
 second.textContent=""
 resetPick()
-},600)
+},500)
 }
 }
 }
@@ -222,3 +213,4 @@ start()
 
 </body>
 </html>
+
