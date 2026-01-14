@@ -52,20 +52,8 @@ pointer-events:none;
 }
 
 @media (max-width:480px){
-  .board{
-    gap:8px;
-    --card:64px;
-  }
-  .card{
-    border-radius:12px;
-    font-size:calc(var(--card) * 0.45);
-  }
-}
-
-@media (max-width:360px){
-  .board{
-    --card:56px;
-  }
+  .board{ gap:8px; }
+  .card{ border-radius:12px; }
 }
 </style>
 </head>
@@ -157,6 +145,15 @@ let cards=[...set,...set].sort(()=>Math.random()-0.5)
 
 const board=document.getElementById("board")
 board.style.gridTemplateColumns=`repeat(${size}, var(--card))`
+
+if(window.innerWidth <= 480){
+  if(size === 4) board.style.setProperty("--card","64px")
+  if(size === 6) board.style.setProperty("--card","52px")
+  if(size === 8) board.style.setProperty("--card","44px")
+}else{
+  board.style.setProperty("--card","90px")
+}
+
 board.innerHTML=""
 
 cards.forEach(v=>{
@@ -225,4 +222,3 @@ start()
 
 </body>
 </html>
-
