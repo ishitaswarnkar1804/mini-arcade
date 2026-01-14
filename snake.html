@@ -15,6 +15,13 @@ max-width:100%;
 height:auto;
 touch-action:none;
 }
+
+@media (max-width:480px){
+#game{
+width:90vw;
+height:90vw;
+}
+}
 </style>
 </head>
 <body>
@@ -50,8 +57,8 @@ touch-action:none;
 </div>
 </div>
 
-<canvas id="game" width="420" height="420"></canvas>
-<p style="margin-top:14px;letter-spacing:2px;color:#7ffcff;">Press SPACE to start / restart</p>
+<canvas id="game"></canvas>
+<p style="margin-top:14px;letter-spacing:2px;color:#7ffcff;">Press SPACE or Swipe to start / restart</p>
 </div>
 </main>
 
@@ -62,8 +69,42 @@ e.preventDefault()
 }
 })
 
-let sx=0, sy=0
+let score=0,level="Easy"
+const game="snake"
+const canvas=document.getElementById("game")
+const ctx=canvas.getContext("2d")
 
+let box=20
+let speed=160
+let loop=null
+let running=false
+let snake,food,dx,dy
+
+function resizeCanvas(){
+if(window.innerWidth<=480){
+const size = Math.floor(window.innerWidth * 0.9)
+canvas.width = size
+canvas.height = size
+box = Math.floor(size / 20)
+}else{
+canvas.width = 420
+canvas.height = 420
+box = 20
+}
+}
+resizeCanvas()
+window.addEventListener("resize", resizeCanvas)
+
+document.addEventListener("keydown",e=>{
+if(!running && e.code==="Space") start()
+if(!running) return
+if(e.key==="ArrowLeft"&&dx===0){dx=-box;dy=0}
+if(e.key==="ArrowUp"&&dy===0){dx=0;dy=-box}
+if(e.key==="ArrowRight"&&dx===0){dx=box;dy=0}
+if(e.key==="ArrowDown"&&dy===0){dx=0;dy=box}
+})
+
+let sx=0, sy=0
 document.addEventListener("touchstart", e=>{
 const t=e.touches[0]
 sx=t.clientX
@@ -85,26 +126,6 @@ if(dys>30 && dy===0){dx=0;dy=box}
 if(dys<-30 && dy===0){dx=0;dy=-box}
 }
 },{passive:false})
-
-let score=0,level="Easy"
-const game="snake"
-const canvas=document.getElementById("game")
-const ctx=canvas.getContext("2d")
-const box=20
-let speed=160
-let loop=null
-let running=false
-
-let snake,food,dx,dy
-
-document.addEventListener("keydown",e=>{
-if(!running && e.code==="Space") start()
-if(!running) return
-if(e.key==="ArrowLeft"&&dx===0){dx=-box;dy=0}
-if(e.key==="ArrowUp"&&dy===0){dx=0;dy=-box}
-if(e.key==="ArrowRight"&&dx===0){dx=box;dy=0}
-if(e.key==="ArrowDown"&&dy===0){dx=0;dy=box}
-})
 
 async function loadHigh(){
 const r=await fetch(`http://localhost:3000/high-score/${game}/${level}`)
@@ -139,7 +160,7 @@ loop=null
 }
 
 function reset(){
-snake=[{x:200,y:200}]
+snake=[{x:Math.floor(canvas.width/2/box)*box,y:Math.floor(canvas.height/2/box)*box}]
 dx=box;dy=0
 food=spawn()
 score=0
@@ -148,13 +169,13 @@ document.getElementById("score").textContent=0
 
 function spawn(){
 return{
-x:Math.floor(Math.random()*20)*box,
-y:Math.floor(Math.random()*20)*box
+x:Math.floor(Math.random()*(canvas.width/box))*box,
+y:Math.floor(Math.random()*(canvas.height/box))*box
 }
 }
 
 async function saveScore(){
-const res = await fetch("http://localhost:3000/save-score",{
+await fetch("http://localhost:3000/save-score",{
 method:"POST",
 headers:{ "Content-Type":"application/json" },
 body:JSON.stringify({game,level,score})
@@ -164,9 +185,9 @@ await loadHigh()
 
 function drawGrid(){
 ctx.strokeStyle="rgba(0,255,255,.08)"
-for(let i=0;i<=420;i+=20){
-ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,420);ctx.stroke()
-ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(420,i);ctx.stroke()
+for(let i=0;i<=canvas.width;i+=box){
+ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,canvas.height);ctx.stroke()
+ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(canvas.width,i);ctx.stroke()
 }
 }
 
@@ -187,7 +208,7 @@ ctx.fill()
 
 function draw(){
 ctx.fillStyle="#02040d"
-ctx.fillRect(0,0,420,420)
+ctx.fillRect(0,0,canvas.width,canvas.height)
 drawGrid()
 
 ctx.shadowColor="#ff2fd1"
@@ -215,7 +236,7 @@ food=spawn()
 snake.pop()
 }
 
-if(head.x<0||head.y<0||head.x>=420||head.y>=420||snake.some(s=>s.x===head.x&&s.y===head.y)){
+if(head.x<0||head.y<0||head.x>=canvas.width||head.y>=canvas.height||snake.some(s=>s.x===head.x&&s.y===head.y)){
 gameOver()
 return
 }
@@ -227,26 +248,27 @@ async function gameOver(){
 stop()
 await saveScore()
 ctx.fillStyle="rgba(0,0,0,.6)"
-ctx.fillRect(0,0,420,420)
+ctx.fillRect(0,0,canvas.width,canvas.height)
 ctx.fillStyle="#00fff0"
 ctx.font="24px Orbitron"
 ctx.textAlign="center"
-ctx.fillText("GAME OVER",210,200)
+ctx.fillText("GAME OVER",canvas.width/2,canvas.height/2-10)
 ctx.font="14px Orbitron"
-ctx.fillText("Press SPACE to Restart",210,230)
+ctx.fillText("Swipe or Press SPACE",canvas.width/2,canvas.height/2+20)
 }
 
 function drawIdle(){
 ctx.fillStyle="#02040d"
-ctx.fillRect(0,0,420,420)
+ctx.fillRect(0,0,canvas.width,canvas.height)
 drawGrid()
 ctx.fillStyle="#00fff0"
 ctx.font="16px Orbitron"
 ctx.textAlign="center"
-ctx.fillText("Press SPACE to Start",210,210)
+ctx.fillText("Swipe or Press SPACE",canvas.width/2,canvas.height/2)
 }
 
 drawIdle()
 </script>
+
 </body>
 </html>
