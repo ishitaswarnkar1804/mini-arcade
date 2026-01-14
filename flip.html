@@ -8,44 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<header class="topbar">
-<div class="brand">
-<div class="logo">MA</div>
-<div class="title">
-<h1>Mini Arcade</h1>
-<p>Flip Cards</p>
-</div>
-</div>
-<nav class="nav"><a href="index.html">Home</a></nav>
-</header>
-
-<main class="arena">
-<div class="game-box">
-<h2>Flip Cards</h2>
-
-<div class="controls">
-<div class="levels">
-<button onclick="setLevel(this,'Easy')" class="active">Easy</button>
-<button onclick="setLevel(this,'Medium')">Medium</button>
-<button onclick="setLevel(this,'Hard')">Hard</button>
-</div>
-
-<div class="scoreboard">
-<p>Level: <span id="level">Easy</span></p>
-<p>Moves: <span id="moves">0</span></p>
-<p>Score: <span id="score">0</span></p>
-<p>High Score: <span id="high">0</span></p>
-</div>
-</div>
-
-<div id="board" class="board"></div>
-<div id="status" style="margin-top:12px;font-family:Orbitron,sans-serif;letter-spacing:2px;font-size:16px;color:#ff2fd1;"></div>
-<button id="playAgain" class="reset-btn" style="display:none;margin-top:10px" onclick="start()">Play Again</button>
-</div>
-</main>
 
 <style>
 .board{
@@ -88,22 +50,62 @@ color:#05070f;
 box-shadow:0 0 28px rgba(26,255,140,1);
 pointer-events:none;
 }
-@media (max-width: 480px){
-  .board{
-    gap: 8px;
-  }
 
+@media (max-width:480px){
   .board{
-    --card: 64px;
+    gap:8px;
+    --card:64px;
   }
-
   .card{
-    border-radius: 12px;
-    font-size: calc(var(--card) * 0.45);
+    border-radius:12px;
+    font-size:calc(var(--card) * 0.45);
   }
 }
 
+@media (max-width:360px){
+  .board{
+    --card:56px;
+  }
+}
 </style>
+</head>
+<body>
+
+<header class="topbar">
+<div class="brand">
+<div class="logo">MA</div>
+<div class="title">
+<h1>Mini Arcade</h1>
+<p>Flip Cards</p>
+</div>
+</div>
+<nav class="nav"><a href="index.html">Home</a></nav>
+</header>
+
+<main class="arena">
+<div class="game-box">
+<h2>Flip Cards</h2>
+
+<div class="controls">
+<div class="levels">
+<button onclick="setLevel(this,'Easy')" class="active">Easy</button>
+<button onclick="setLevel(this,'Medium')">Medium</button>
+<button onclick="setLevel(this,'Hard')">Hard</button>
+</div>
+
+<div class="scoreboard">
+<p>Level: <span id="level">Easy</span></p>
+<p>Moves: <span id="moves">0</span></p>
+<p>Score: <span id="score">0</span></p>
+<p>High Score: <span id="high">0</span></p>
+</div>
+</div>
+
+<div id="board" class="board"></div>
+<div id="status" style="margin-top:12px;font-family:Orbitron,sans-serif;letter-spacing:2px;font-size:16px;color:#ff2fd1;"></div>
+<button id="playAgain" class="reset-btn" style="display:none;margin-top:10px" onclick="start()">Play Again</button>
+</div>
+</main>
 
 <script>
 let level="Easy",moves=0,score=0,lock=false
@@ -147,7 +149,6 @@ document.getElementById("moves").textContent=0
 document.getElementById("score").textContent=0
 
 const size=gridSize()
-const card = level==="Easy" ? 100 : level==="Medium" ? 80 : 60
 const pairs=(size*size)/2
 totalPairs = pairs
 
@@ -155,8 +156,7 @@ let set=icons.slice(0,pairs)
 let cards=[...set,...set].sort(()=>Math.random()-0.5)
 
 const board=document.getElementById("board")
-board.style.setProperty("--card", card+"px")
-board.style.gridTemplateColumns=`repeat(${size}, ${card}px)`
+board.style.gridTemplateColumns=`repeat(${size}, var(--card))`
 board.innerHTML=""
 
 cards.forEach(v=>{
@@ -191,7 +191,7 @@ second.classList.remove("flipped")
 first.textContent=""
 second.textContent=""
 resetPick()
-},700)
+},600)
 }
 }
 }
@@ -225,3 +225,4 @@ start()
 
 </body>
 </html>
+
